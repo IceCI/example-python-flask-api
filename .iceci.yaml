@@ -1,0 +1,75 @@
+globals:
+  onFailure:
+  #  This failure handler will be called failed of any step in the pipeline
+  # comment this out if you do not want to integrate pipeline with slack
+  - handlerName: slack-notify-error
+
+failureHandlers:
+- name: debug-env
+  image: busybox
+  script: |
+    echo "### PWD"
+    pwd
+    echo "### ENV"
+    env
+    echo "ls -la"
+    ls -la
+
+- name: slack-notify-error
+  image: iceci/utils
+  script: |
+    cat <<EOF > slacknotify.json
+    {
+      "text" : "Build $ICE_BUILD_NUMBER on branch $ICE_GIT_BRANCH_NAME failed on step $ICE_FAILED_STEP_NAME commited by $ICE_GIT_AUTHOR_NAME"
+    }
+    EOF
+    curl -X POST -H 'Content-type: application/json' --data "@slacknotify.json" $SLACK_WEBHOOK
+  environment:
+    SLACK_WEBHOOK: "{{ slack-webhook }}"
+
+# Service with postgres will run during whole pipeline
+services:
+- name: db
+  image: postgres:11
+  environment:
+    POSTGRES_DB: testdb
+    POSTGRES_PASSWORD: dbpass
+    POSTGRES_USER: dbuser
+
+
+steps:
+- name: run-tests
+  dockerRun:
+    image: python:3.7
+    script: |
+      pip install -r requirements.txt
+      pip install -r requirements-test.txt
+      flask initdb
+      pytest quotes_tests.py
+    environment:
+      QUOTES_DB_URI: "postgresql+psycopg2://dbuser:dbpass@db:5432/testdb"
+      FLASK_APP: quotes.py
+
+- name: build-docker-image
+  dockerBuild:
+    dockerSecret: dockerhub
+    registry: docker.io
+    # TODO: change user and image name to repository that you have access to
+    user: iceci
+    imageName: example-python-webapp
+    tag: latest
+
+# comment this step out if you do not want to integrate this pipeline with slack
+- name: slack-notify
+  dockerRun:
+    image: iceci/utils
+    script: |
+      cat <<EOF > slacknotify.json
+      {
+        "text" : "Build $ICE_BUILD_NUMBER on branch $ICE_GIT_BRANCH_NAME finished successfully!"
+      }
+      EOF
+      curl -X POST -H 'Content-type: application/json' --data "@slacknotify.json" $SLACK_WEBHOOK
+    environment:
+      SLACK_WEBHOOK: "{{ slack-webhook }}"
+
