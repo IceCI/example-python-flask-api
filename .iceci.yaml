@@ -25,17 +25,20 @@ failureHandlers:
     EOF
     curl -X POST -H 'Content-type: application/json' --data "@slacknotify.json" $SLACK_WEBHOOK
   environment:
-    SLACK_WEBHOOK: "{{ slack-webhook }}"
+  - name: SLACK_WEBHOOK
+    fromSecret: slack-webhook
 
 # Service with postgres will run during whole pipeline
 services:
 - name: db
   image: postgres:11
   environment:
-    POSTGRES_DB: testdb
-    POSTGRES_PASSWORD: dbpass
-    POSTGRES_USER: dbuser
-
+  - name: POSTGRES_DB
+    value: testdb
+  - name: POSTGRES_PASSWORD
+    value: dbpass
+  - name: POSTGRES_USER
+    value: dbuser
 
 steps:
 - name: run-tests
@@ -47,8 +50,10 @@ steps:
       flask initdb
       pytest quotes_tests.py
     environment:
-      QUOTES_DB_URI: "postgresql+psycopg2://dbuser:dbpass@db:5432/testdb"
-      FLASK_APP: quotes.py
+    - name: QUOTES_DB_URI
+      value: "postgresql+psycopg2://dbuser:dbpass@db:5432/testdb"
+    - name: FLASK_APP
+      value: quotes.py
 
 - name: build-docker-image
   dockerBuild:
@@ -71,5 +76,5 @@ steps:
       EOF
       curl -X POST -H 'Content-type: application/json' --data "@slacknotify.json" $SLACK_WEBHOOK
     environment:
-      SLACK_WEBHOOK: "{{ slack-webhook }}"
-
+    - name: SLACK_WEBHOOK
+      fromSecret: slack-webhook

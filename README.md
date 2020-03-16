@@ -16,3 +16,8 @@ To launch the pipeline in IceCI you have to create 2 secrets - both of which are
 * `slack-webhook` - a generic secret with hook for Slack notifications - it can be ignored by commenting out the `slack-notify` step as well as the `slack-notify-error` failure handler in the pipeline definition file. 
 
 You can also find some additional info in the comments of the `.iceci.yaml` file itself.
+
+
+---
+
+_Kept cool &#x1f9ca; by [Icetek](https://icetek.io/)_
