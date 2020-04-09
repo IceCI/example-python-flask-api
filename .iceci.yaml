@@ -62,7 +62,9 @@ steps:
     # TODO: change user and image name to repository that you have access to
     user: iceci
     imageName: example-python-webapp
-    tag: latest
+    tags:
+    - "{{ ICE_BUILD_NUMBER }}"
+    - latest
 
 # comment this step out if you do not want to integrate this pipeline with slack
 - name: slack-notify
