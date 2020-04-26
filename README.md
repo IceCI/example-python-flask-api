@@ -20,4 +20,4 @@ You can also find some additional info in the comments of the `.iceci.yaml` file
 
 ---
 
-_Kept cool &#x1f9ca; by [Icetek](https://icetek.io/)_
+Kept cool &#x1f9ca; by [Icetek](https://icetek.io/)
